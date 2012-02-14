@@ -13,7 +13,6 @@ require __DIR__ . '/../../../../lib/IOAuth2RefreshTokens.php';
 
 /**
  * WARNING: This example file has not been kept up to date like the PDO example has.
- * FIXME: Update the Mongo examples
  * 
  * Mongo storage engine for the OAuth2 Library.
  */
@@ -25,7 +24,8 @@ class OAuth2StorageMongo implements IOAuth2GrantCode, IOAuth2RefreshTokens {
 	 */
 	const SALT = 'CHANGE_ME!';
 	
-	const CONNECTION = 'mongodb://user:pass@mongoserver/mydb';
+//	const CONNECTION = 'mongodb://user:pass@mongoserver/mydb';
+	const CONNECTION = 'mongodb://erik:mongomaster@localhost/admin';
 	const DB = 'mydb';
 	
 	/**
@@ -36,7 +36,7 @@ class OAuth2StorageMongo implements IOAuth2GrantCode, IOAuth2RefreshTokens {
 	/**
 	 * Implements OAuth2::__construct().
 	 */
-	public function __construct(PDO $db) {
+	public function __construct() {
 		
 		$mongo = new Mongo(self::CONNECTION);
 		$this->db = $mongo->selectDB(self::DB);
@@ -76,8 +76,9 @@ class OAuth2StorageMongo implements IOAuth2GrantCode, IOAuth2RefreshTokens {
 	 *
 	 */
 	public function checkClientCredentials($client_id, $client_secret = NULL) {
-		$client = $this->db->clients->findOne(array("_id" => $client_id, "pw" => $client_secret));
-		return $this->checkPassword($client_secret, $result['client_secret'], $client_id);
+		$client = $this->db->clients->findOne(array("_id" => $client_id), array("pw"));
+		syslog(LOG_WARNING, 'client=' . var_export($client, true));
+		return $this->checkPassword($client['pw'], $client_secret, $client_id);
 	}
 
 	/**
@@ -85,6 +86,7 @@ class OAuth2StorageMongo implements IOAuth2GrantCode, IOAuth2RefreshTokens {
 	 */
 	public function getClientDetails($client_id) {
 		$result = $this->db->clients->findOne(array("_id" => $client_id), array("redirect_uri"));
+		return $result;
 	}
 
 	/**
@@ -105,28 +107,21 @@ class OAuth2StorageMongo implements IOAuth2GrantCode, IOAuth2RefreshTokens {
 	 * @see IOAuth2Storage::getRefreshToken()
 	 */
 	public function getRefreshToken($refresh_token) {
-		return $this->getToken($refresh_token, TRUE);
+		return $this->db->refresh_tokens->findOne(array("_id" => $refresh_token));
 	}
 
 	/**
 	 * @see IOAuth2Storage::setRefreshToken()
 	 */
 	public function setRefreshToken($refresh_token, $client_id, $user_id, $expires, $scope = NULL) {
-		return $this->setToken($refresh_token, $client_id, $user_id, $expires, $scope, TRUE);
+		$this->db->refresh_tokens->insert(array("_id" => $refresh_token, "client_id" => $client_id, "expires" => $expires, "scope" => $scope));
 	}
 
 	/**
 	 * @see IOAuth2Storage::unsetRefreshToken()
 	 */
 	public function unsetRefreshToken($refresh_token) {
-		try {
-			$sql = 'DELETE FROM ' . self::TABLE_TOKENS . ' WHERE refresh_token = :refresh_token';
-			$stmt = $this->db->prepare($sql);
-			$stmt->bindParam(':refresh_token', $refresh_token, PDO::PARAM_STR);
-			$stmt->execute();
-		} catch (PDOException $e) {
-			$this->handleException($e);
-		}
+		$this->db->refresh_tokens->remove(array("_id" => $refresh_token));
 	}
 
 	/**
@@ -158,6 +153,7 @@ class OAuth2StorageMongo implements IOAuth2GrantCode, IOAuth2RefreshTokens {
 	 * @return string
 	 */
 	protected function hash($client_secret, $client_id) {
+//		return hash('sha1', $client_id . $client_secret . self::SALT);
 		return hash('blowfish', $client_id . $client_secret . self::SALT);
 	}
 
