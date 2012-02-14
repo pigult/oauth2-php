@@ -24,8 +24,7 @@ class OAuth2StorageMongo implements IOAuth2GrantCode, IOAuth2RefreshTokens {
 	 */
 	const SALT = 'CHANGE_ME!';
 	
-//	const CONNECTION = 'mongodb://user:pass@mongoserver/mydb';
-	const CONNECTION = 'mongodb://erik:mongomaster@localhost/admin';
+	const CONNECTION = 'mongodb://user:pass@mongoserver/mydb';
 	const DB = 'mydb';
 	
 	/**
