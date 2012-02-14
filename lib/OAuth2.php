@@ -674,8 +674,13 @@ class OAuth2 {
 				if (empty($client[1])) {
 					throw new OAuth2ServerException(self::HTTP_BAD_REQUEST, self::ERROR_INVALID_CLIENT, 'The client_secret is mandatory for the "client_credentials" grant type');
 				}
-				// NB: We don't need to check for $stored==false, because it was checked above already
 				$stored = $this->storage->checkClientCredentialsGrant($client[0], $client[1]);
+
+				// NB: We don't need to check for $stored==false, because it was checked above already
+				// ELB: Yes, we do, since this grant_type may not be supported for all client_id's
+				if ($stored === FALSE) {
+					throw new OAuth2ServerException(self::HTTP_BAD_REQUEST, self::ERROR_INVALID_GRANT);
+				}
 				break;
 			
 			case self::GRANT_TYPE_REFRESH_TOKEN:
