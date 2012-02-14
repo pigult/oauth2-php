@@ -618,6 +618,9 @@ class OAuth2 {
 			throw new OAuth2ServerException(self::HTTP_BAD_REQUEST, self::ERROR_UNAUTHORIZED_CLIENT, 'The grant type is unauthorized for this client_id');
 		}
 		
+		// most grant types SHOULD generate a refresh token
+		$generate_refresh = TRUE;
+
 		// Do the granting
 		switch ($input["grant_type"]) {
 			case self::GRANT_TYPE_AUTH_CODE:
@@ -681,6 +684,10 @@ class OAuth2 {
 				if ($stored === FALSE) {
 					throw new OAuth2ServerException(self::HTTP_BAD_REQUEST, self::ERROR_INVALID_GRANT);
 				}
+
+				// per http://tools.ietf.org/html/draft-ietf-oauth-v2-20#section-4.4.3 client_credentials SHOULD NOT
+				// generate a refresh token
+				$generate_refresh = FALSE;
 				break;
 			
 			case self::GRANT_TYPE_REFRESH_TOKEN:
@@ -742,7 +749,7 @@ class OAuth2 {
 		}
 		
 		$user_id = isset($stored['user_id']) ? $stored['user_id'] : null;
-		$token = $this->createAccessToken($client[0], $user_id, $stored['scope']);
+		$token = $this->createAccessToken($client[0], $user_id, $stored['scope'], $generate_refresh);
 		
 		// Send response
 		$this->sendJsonHeaders();
@@ -919,7 +926,7 @@ class OAuth2 {
 			if ($response_type == self::RESPONSE_TYPE_AUTH_CODE) {
 				$result["query"]["code"] = $this->createAuthCode($client_id, $user_id, $redirect_uri, $scope);
 			} elseif ($response_type == self::RESPONSE_TYPE_ACCESS_TOKEN) {
-				$result["fragment"] = $this->createAccessToken($client_id, $user_id, $scope);
+				$result["fragment"] = $this->createAccessToken($client_id, $user_id, $scope, TRUE);
 			}
 		}
 		
@@ -994,13 +1001,17 @@ class OAuth2 {
 	 *
 	 * @param $client_id
 	 * Client identifier related to the access token.
+	 * @param $user_id
+	 * User identifier related to the access token
 	 * @param $scope
 	 * (optional) Scopes to be stored in space-separated string.
+	 * @param $generate_refresh
+	 * (optional) Generate a refresh token
 	 *
 	 * @see http://tools.ietf.org/html/draft-ietf-oauth-v2-20#section-5
 	 * @ingroup oauth2_section_5
 	 */
-	protected function createAccessToken($client_id, $user_id, $scope = NULL) {
+	protected function createAccessToken($client_id, $user_id, $scope = NULL, $generate_refresh = TRUE) {
 		
 		$token = array(
 			"access_token" => $this->genAccessToken(),
@@ -1012,7 +1023,7 @@ class OAuth2 {
 		$this->storage->setAccessToken($token["access_token"], $client_id, $user_id, time() + $this->getVariable(self::CONFIG_ACCESS_LIFETIME), $scope);
 		
 		// Issue a refresh token also, if we support them
-		if ($this->storage instanceof IOAuth2RefreshTokens) {
+		if ($generate_refresh && $this->storage instanceof IOAuth2RefreshTokens) {
 			$token["refresh_token"] = $this->genAccessToken();
 			$this->storage->setRefreshToken($token["refresh_token"], $client_id, $user_id, time() + $this->getVariable(self::CONFIG_REFRESH_LIFETIME), $scope);
 			
