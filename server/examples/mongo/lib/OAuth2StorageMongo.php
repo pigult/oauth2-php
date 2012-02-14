@@ -14,7 +14,6 @@ require __DIR__ . '/../../../../lib/IOAuth2GrantUser.php';
 require __DIR__ . '/../../../../lib/IOAuth2RefreshTokens.php';
 
 /**
- * WARNING: This example file has not been kept up to date like the PDO example has.
  * 
  * Mongo storage engine for the OAuth2 Library.
  */
@@ -49,14 +48,6 @@ class OAuth2StorageMongo implements IOAuth2GrantCode, IOAuth2RefreshTokens, IOAu
 	 */
 	function __destruct() {
 		$this->db = NULL; // Release db connection
-	}
-
-	/**
-	 * Handle PDO exceptional cases.
-	 */
-	private function handleException($e) {
-		echo 'Database error: ' . $e->getMessage();
-		exit();
 	}
 
 	/**
