@@ -138,12 +138,7 @@ class OAuth2StorageMongo implements IOAuth2GrantCode, IOAuth2RefreshTokens, IOAu
 	 * @see IOAuth2GrantClient::checkClientCredentialsGrant()
 	 */
 	public function checkClientCredentialsGrant($client_id, $client_secret) {
-		$client = $this->db->clients->findOne(array('_id' => $client_id), array('pw', 'grant_types'));
-		if (!isset($client['grant_types']))
-			return FALSE;
-
-		if (!in_array('client_credentials', $client['grant_types']))
-			return FALSE;
+		$client = $this->db->clients->findOne(array('_id' => $client_id), array('pw'));
 
 		return $this->checkPassword($client['pw'], $client_secret, $client_id);
 	}
@@ -152,13 +147,6 @@ class OAuth2StorageMongo implements IOAuth2GrantCode, IOAuth2RefreshTokens, IOAu
 	 * @see IOAuth2GrantUser::checkUserCredentials()
 	 */
 	public function checkUserCredentials($client_id, $username, $password) {
-		$client = $this->db->clients->findOne(array('_id' => $client_id), array('grant_types'));
-		if (!isset($client['grant_types']))
-			return FALSE;
-
-		if (!in_array('password', $client['grant_types']))
-			return FALSE;
-
 		$user = $this->db->users->findOne(array("_id" => $username));
 		if (!$this->checkPassword($user['pw'], $password, $username))
 			return false;
@@ -188,7 +176,14 @@ class OAuth2StorageMongo implements IOAuth2GrantCode, IOAuth2RefreshTokens, IOAu
 	 * @see IOAuth2Storage::checkRestrictedGrantType()
 	 */
 	public function checkRestrictedGrantType($client_id, $grant_type) {
-		return TRUE; // Not implemented
+		$client = $this->db->clients->findOne(array('_id' => $client_id), array('grant_types'));
+
+		// if no grant types are specified, assume all are valid
+		if (!isset($client['grant_types']))
+			return TRUE;
+
+		// return true iff the grant_type is amongst those listed
+		return in_array($grant_type, $client['grant_types']);
 	}
 
 	/**
