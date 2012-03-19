@@ -49,6 +49,34 @@ class OAuth2Test extends PHPUnit_Framework_TestCase {
     $this->fixture->verifyAccessToken($this->tokenId, $scope);
   }
   
+    /**
+     * Tests OAuth2->getBearerToken() with various headers
+     * 
+     * @dataProvider generateAuthorizationHeaders
+     */
+    public function testGetBearerTokenWithCapitalizedAccessToken($headers)
+    {
+        // Set up the mock storage to say this token does not exist
+        $mockStorage = $this->getMock('IOAuth2Storage');
+        $this->fixture = new OAuth2($mockStorage);
+        
+        $GLOBALS['HEADERS'] = $headers;
+        $this->assertEquals($this->tokenId, $this->fixture->getBearerToken());
+    }
+    
+    /**
+     * Dataprovider for testGetBearerTokenWithCapitalizedAccessToken().
+     * 
+     * Produces authorization headers
+     */
+    public function generateAuthorizationHeaders() {
+        return array(
+            array(array('AUTHORIZATION' => 'Bearer ' . $this->tokenId)),
+            array(array('authorization' => 'Bearer ' . $this->tokenId)),
+            array(array('aUTHORIZATION' => 'Bearer ' . $this->tokenId)),
+        );
+    }
+  
   /**
    * Tests OAuth2->verifyAccessToken() with a malformed token
    * 
@@ -449,5 +477,14 @@ class OAuth2Test extends PHPUnit_Framework_TestCase {
       ),
     );
   }
+}
+
+if(!function_exists('apache_request_headers')){
+    function apache_request_headers(){
+        if(!isset($GLOBALS['HEADERS'])){
+            $GLOBALS['HEADERS'] = array();
+        }
+        return $GLOBALS['HEADERS'];
+    }
 }
 
