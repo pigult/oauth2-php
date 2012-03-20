@@ -478,8 +478,6 @@ class OAuth2 {
 	 * Old Android version bug (at least with version 2.2)
 	 * @see http://code.google.com/p/android/issues/detail?id=6684
 	 * 
-	 * We don't want to test this functionality as it relies on superglobals and headers:
-	 * @codeCoverageIgnoreStart
 	 */
 	public function getBearerToken() {
 		if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
@@ -536,8 +534,6 @@ class OAuth2 {
 		return $_GET[self::TOKEN_PARAM_NAME];
 	}
 
-	/** @codeCoverageIgnoreEnd */
-	
 	/**
 	 * Check if everything in required scope is contained in available scope.
 	 *
