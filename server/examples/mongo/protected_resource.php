@@ -11,8 +11,6 @@
 
 require "lib/OAuth2StorageMongo.php";
 
-$token = isset($_GET[OAuth2::TOKEN_PARAM_NAME]) ? $_GET[OAuth2::TOKEN_PARAM_NAME] : null;
-
 try {
 	$oauth = new OAuth2(new OAuth2StorageMongo());
 	$token = $oauth->getBearerToken();
