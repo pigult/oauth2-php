@@ -1,5 +1,5 @@
 {
-	"name": "signaly/oauth2-php",
+	"name": "ramunasd/oauth2-php",
 	"type": "library",
 	"description": "OAuth2 library for PHP.",
 	"keywords": ["php", "oauth", "oauth2"],
@@ -7,14 +7,11 @@
 	"authors": [
 		{
 			"name": "All contributors",
-			"homepage": "https://github.com/signaly/oauth2-php/graphs/contributors"
+			"homepage": "https://github.com/ramunasd/oauth2-php/graphs/contributors"
 		}
 	],
 	"require": {
 		"php": ">=5.2.0"
-	},
-	"require-dev": {
-		"nette/tester": "dev-master"
 	},
 	"autoload": {
 		"classmap": ["lib/"]
