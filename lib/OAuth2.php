@@ -848,18 +848,16 @@ class OAuth2 {
 		
 		// Select the redirect URI
 		$input["redirect_uri"] = isset($input["redirect_uri"]) ? $input["redirect_uri"] : $stored["redirect_uri"];
-		
+
 		// type and client_id are required
 		if (!$input["response_type"]) {
 			throw new OAuth2RedirectException($input["redirect_uri"], self::ERROR_INVALID_REQUEST, 'Invalid or missing response type.', $input["state"]);
 		}
-		
-		// Check requested auth response type against interfaces of storage engine
-		$reflect = new ReflectionClass($this->storage);
-		if (!$reflect->hasConstant('RESPONSE_TYPE_' . strtoupper($input['response_type']))) {
+
+		if ($input['response_type'] != self::RESPONSE_TYPE_AUTH_CODE && $input['response_type'] != self::RESPONSE_TYPE_ACCESS_TOKEN) {
 			throw new OAuth2RedirectException($input["redirect_uri"], self::ERROR_UNSUPPORTED_RESPONSE_TYPE, NULL, $input["state"]);
 		}
-		
+
 		// Validate that the requested scope is supported
 		if ($input["scope"] && !$this->checkScope($input["scope"], $this->getVariable(self::CONFIG_SUPPORTED_SCOPES))) {
 			throw new OAuth2RedirectException($input["redirect_uri"], self::ERROR_INVALID_SCOPE, 'An unsupported scope was requested.', $input["state"]);
@@ -903,7 +901,13 @@ class OAuth2 {
 	 * @ingroup oauth2_section_4
 	 */
 	public function finishClientAuthorization($is_authorized, $user_id = NULL, $params = array()) {
-		
+		list($redirect_uri, $result) = $this->getAuthResult($is_authorized, $user_id, $params);
+		$this->doRedirectUriCallback($redirect_uri, $result);
+	}
+
+	// same params as above
+	public function getAuthResult($is_authorized, $user_id = NULL, $params = array()) {
+
 		// We repeat this, because we need to re-validate. In theory, this could be POSTed
 		// by a 3rd-party (because we are not internally enforcing NONCEs, etc)
 		$params = $this->getAuthorizeParams($params);
@@ -924,8 +928,8 @@ class OAuth2 {
 				$result["fragment"] = $this->createAccessToken($client_id, $user_id, $scope, TRUE);
 			}
 		}
-		
-		$this->doRedirectUriCallback($redirect_uri, $result);
+
+		return array($redirect_uri, $result);
 	}
 
 	// Other/utility functions.
