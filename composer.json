@@ -1,5 +1,5 @@
 {
-	"name": "ramunasd/oauth2-php",
+	"name": "pigult/oauth2-php",
 	"type": "library",
 	"description": "OAuth2 library for PHP.",
 	"keywords": ["php", "oauth", "oauth2"],
@@ -7,7 +7,7 @@
 	"authors": [
 		{
 			"name": "All contributors",
-			"homepage": "https://github.com/ramunasd/oauth2-php/graphs/contributors"
+			"homepage": "https://github.com/pigult/oauth2-php/graphs/contributors"
 		}
 	],
 	"require": {
